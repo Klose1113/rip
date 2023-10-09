@@ -7,10 +7,14 @@ k = 0
 shroomx = 0
 p = 0
 
+
 webcam = cv2.VideoCapture(0)
+arduino = serial.Serial('/dev/ttyUSB0',115200)
 
 while(1):
     _, frame = webcam.read()
+  
+    
     hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
     blue_lower = np.array([90, 50, 50], np.uint8)
@@ -24,17 +28,23 @@ while(1):
     yellow_lower = np.array([20,100,100], np.uint8)
     yellow_upper = np.array([40,255,255], np.uint8)
     yellow_mask1 = cv2.inRange(hsvFrame, yellow_lower, yellow_upper)
+    
+    black_lower = np.array([0,0,0], np.uint8)
+    black_upper = np.array([255,255,255], np.uint8)
+    black_mask1 = cv2.inRange(hsvFrame, black_lower, black_upper)
 
     kernel = np.ones((5, 5), "uint8")
 
     blue_mask2 = cv2.dilate(blue_mask1, kernel)
     red_mask2 = cv2.dilate(red_mask1, kernel)
     yellow_mask2 = cv2.dilate(yellow_mask1, kernel)
+    
 
 
     res_blue = cv2.bitwise_and(frame, frame, mask = blue_mask2)
     res_red = cv2.bitwise_and(frame, frame, mask = red_mask2)
     res_yellow = cv2.bitwise_and(frame, frame, mask = yellow_mask2)
+    res_black = cv2.bitwise_and(frame, frame, mask = 255 - black_mask1)
 
 
     gray_blue = cv2.cvtColor(res_blue, cv2.COLOR_BGR2GRAY)
@@ -57,32 +67,45 @@ while(1):
      if circles_blue is not None:
 
         circles_blue = np.round(circles_blue[0, :].astype("int"))
+        
         time.sleep(5)
+        arduino.write(b'1\n')
+        arduino.reset_output_buffer()
         j = 1
         k = 1
+        
 
 
      elif circles_red is not None:
         circles_red = np.round(circles_red[0, :].astype("int"))
+        
         time.sleep(5)
+        arduino.write(b'2\n')
+        arduino.reset_output_buffer()
         j = 2
         k = 1
+     
 
 
-     contours, hierarchy = cv2.findContours(yellow_mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+     '''contours, hierarchy = cv2.findContours(yellow_mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
      for pic, contour in enumerate(contours):
               area = cv2.contourArea(contour)
               if(area > 5000):
                    time.sleep(5)
+                   arduino.write(b'3\n')
+                   arduino.reset_output_buffer()
                    j = 3
-                   k = 1
+                   k = 1'''
+   
 
     if j == 1:
+        
         contours, hierarchy = cv2.findContours(blue_mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for pic, contour in enumerate(contours):
                 area = cv2.contourArea(contour)
                 if(area > 1000):
-                    print('blue shroom')
+                    #print('blue shroom')
+                    
                     x, y, w, h = cv2.boundingRect(contour)
                     frame = cv2.rectangle(frame, (x,y), (x+w, y+h), (255, 0, 0), 2)
 
@@ -96,7 +119,9 @@ while(1):
                     p = 0
                     shroomx = 0
                     if 610 < averagex & averagex < 670:
-                         print('stop')
+                         #print('stop')
+                         arduino.write(b'4\n')
+                         arduino.reset_output_buffer()
                          j = 4
 
 
@@ -105,7 +130,8 @@ while(1):
         for pic, contour in enumerate(contours):
                 area = cv2.contourArea(contour)
                 if(area > 1000):
-                    print('red shroom')
+                    #print('red shroom')
+                  
                     x, y, w, h = cv2.boundingRect(contour)
                     frame = cv2.rectangle(frame, (x,y), (x+w, y+h), (0, 0, 255), 2)
 
@@ -120,16 +146,21 @@ while(1):
                     shroomx = 0
                     #if 640 - 30 < averagex < 640 + 30 send stop signal
                     if 610 < averagex & averagex < 670:
-                         print('stop')
+                         #print('stop')
+                         arduino.write(b'4\n')
+                         arduino.reset_output_buffer()
                          j = 4
 
 
-    elif j == 3:
+    '''elif j == 3:
          contours, hierarchy = cv2.findContours(yellow_mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
          for pic, contour in enumerate(contours):
               area = cv2.contourArea(contour)
               if(area > 1000):
-                   print('yellow shroom')
+                   #print('yellow shroom')
+                   arduino.write(b'4\n')
+                   arduino.reset_output_buffer()
+                   
                    x, y, w, h = cv2.boundingRect(contour)
                    frame = cv2.rectangle(frame, (x,y), (x+w, y+h), (60, 100, 100), 2)
 
@@ -144,7 +175,7 @@ while(1):
                    shroomx = 0
                    if 610 < averagex & averagex < 670:
                         print('stop')
-                        j = 4
+                        j = 4'''
 
 
     cv2.imshow("circle", frame)
