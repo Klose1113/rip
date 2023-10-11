@@ -5,13 +5,16 @@ import time
 
 
 arduino = serial.Serial('/dev/ttyUSB0',115200)
+j = 0
+k = 0
+sign = 'haha' 
 
 def sign_color(img):
     
-    j = 0
-    k = 0
-    sign = ''
-
+    global j
+    global k
+    global sign
+    
     hsvFrame = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     blue_lower = np.array([90, 50, 50], np.uint8)
     blue_upper = np.array([130, 255, 200], np.uint8)
@@ -52,52 +55,68 @@ def sign_color(img):
     circles_red = cv2.HoughCircles(blurred_red, cv2.HOUGH_GRADIENT, 1, 100,
                                param1=100,param2=90,minRadius=0,maxRadius=400)
 
+    
     if k == 0:
-   
         if circles_blue is not None:
 
-            circles_blue = np.round(circles_blue[0, :].astype("int"))
+                circles_blue = np.round(circles_blue[0, :].astype("int"))
 
-            time.sleep(5)
-            #print('blue')
-            arduino.write(b'1\n')
-            arduino.reset_output_buffer()
-            j = 1
-            k = 1
+                time.sleep(5)
+                #print('blue')
+                arduino.write(b'1\n')
+                arduino.reset_output_buffer()
+                j = 1
+                k = 1
 
-
+                
+                
         elif circles_red is not None:
-            circles_red = np.round(circles_red[0, :].astype("int"))
+                circles_red = np.round(circles_red[0, :].astype("int"))
 
-            time.sleep(5)
-            #print('red')
-            arduino.write(b'2\n')
-            arduino.reset_output_buffer()
-            j = 2
-            k = 1
-
+                time.sleep(5)
+                #print('red')
+                arduino.write(b'2\n')
+                arduino.reset_output_buffer()
+                j = 2
+                k = 1
+               
+                
+        
 
         '''contours, hierarchy = cv2.findContours(yellow_mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for pic, contour in enumerate(contours):
-                  area = cv2.contourArea(contour)
-                  if(area > 5000):
-                       time.sleep(5)
-                       #print('yellow')
-                       arduino.write(b'3\n')
-                       arduino.reset_output_buffer()
-                       j = 3
-                       k = 1'''
+                      area = cv2.contourArea(contour)
+                      if(area > 5000):
+                           time.sleep(5)
+                           #print('yellow')
+                           arduino.write(b'3\n')
+                           arduino.reset_output_buffer()
+                           j = 3
+                           k = 1'''
 
         if j == 1:
-             sign = 'blue_shroom'
+                 sign = 'blue_shroom'
+                 
+                 #return sign
+                 
 
         elif j == 2:
-             sign = 'red_shroom'
+                 sign = 'red_shroom'
+               
+                 #return sign
+                 
 
         elif j == 3:
-             sign == 'yellow_shroom'
+                 sign = 'yellow_shroom'
+                 
+                 #return sign
+                 
+            
+            
+    return sign
+    
 
-        return sign
+
 
 def shroom_rec():
 
@@ -105,6 +124,7 @@ def shroom_rec():
     
     shroomx = 0
     p = 0
+    
 
     while webcam.isOpened():
         ret, frame = webcam.read()
@@ -117,7 +137,8 @@ def shroom_rec():
             break
 
         shroom_g = sign_color(frame)
-
+        print(shroom_g)
+        
 
         if shroom_g == 'blue_shroom':
 
@@ -219,6 +240,12 @@ def shroom_rec():
                         #print('stop')
                         arduino.write(b'4\n')
                         arduino.reset_output_buffer()'''
+                        
+                        
+                        
+                        
+                        
+                        
 shroom_rec()
 
 
