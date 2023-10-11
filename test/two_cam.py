@@ -1,37 +1,33 @@
 import cv2
+import threading
 
-# Initialize the first camera
-cap1 = cv2.VideoCapture(0)  # 0 represents the default camera (usually the built-in camera).
+class camThread(threading.Thread):
+    def __init__(self, previewName, camID):
+        threading.Thread.__init__(self)
+        self.previewName = previewName
+        self.camID = camID
+    def run(self):
+        print ("Starting " + self.previewName)
+        camPreview(self.previewName, self.camID)
 
-# Initialize the second camera (change the index if needed)
-cap2 = cv2.VideoCapture(1)  # 1 represents the second camera. You may need to adjust this index.
+def camPreview(previewName, camID):
+    cv2.namedWindow(previewName)
+    cam = cv2.VideoCapture(camID)
+    if cam.isOpened():  # try to get the first frame
+        rval, frame = cam.read()
+    else:
+        rval = False
 
-# Check if the cameras are opened successfully
-if not cap1.isOpened() or not cap2.isOpened():
-    print("Error: Camera(s) not found or could not be opened.")
-    exit()
+    while rval:
+        cv2.imshow(previewName, frame)
+        rval, frame = cam.read()
+        key = cv2.waitKey(20)
+        if key == 27:  # exit on ESC
+            break
+    cv2.destroyWindow(previewName)
 
-while True:
-    # Capture frames from the first camera
-    ret1, frame1 = cap1.read()
-
-    # Capture frames from the second camera
-    ret2, frame2 = cap2.read()
-
-    # Check if frames were successfully captured
-    if not ret1 or not ret2:
-        print("Error: Couldn't read frames from one or both cameras.")
-        break
-
-    # Display the frames from both cameras
-    cv2.imshow('Camera 1', frame1)
-    cv2.imshow('Camera 2', frame2)
-
-    # Press 'q' to exit the loop
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release the camera objects and close the display window
-cap1.release()
-cap2.release()
-cv2.destroyAllWindows()
+# Create two threads as follows
+thread1 = camThread("Camera 1", 0)
+thread2 = camThread("Camera 2", 2)
+thread1.start()
+thread2.start()
